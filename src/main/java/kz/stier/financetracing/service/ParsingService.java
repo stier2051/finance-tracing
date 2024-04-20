@@ -3,6 +3,7 @@ package kz.stier.financetracing.service;
 import com.spire.pdf.PdfDocument;
 import com.spire.pdf.utilities.PdfTable;
 import com.spire.pdf.utilities.PdfTableExtractor;
+import jakarta.transaction.Transactional;
 import kz.stier.financetracing.domain.Transaction;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -24,6 +25,7 @@ public class ParsingService {
     @Autowired
     private TransactionService transactionService;
 
+    @Transactional
     public void parsingPdf(MultipartFile file) throws ParseException, IOException {
 
         InputStream is = file.getInputStream();
@@ -54,7 +56,8 @@ public class ParsingService {
                         break;
                     case 1:
                         String str = StringUtils.deleteWhitespace(table.getText(i, j));
-                        row.setAmount(Double.parseDouble(str.substring(1, str.length() - 1).replace(',', '.')));
+                        int index = str.indexOf("₸");
+                        row.setAmount(Double.parseDouble(str.substring(1, index).replace(',', '.')));
                         break;
                     case 2:
                         row.setTransactionType(table.getText(i, j).trim());
