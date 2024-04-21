@@ -1,0 +1,35 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ "dev", "main" ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'corretto'
+        cache: maven
+
+    - name: Build with Maven
+      run: mvn -B package --file pom.xml clean install -DskipTests
+
+    - name: Build and push Docker image
+      env:
+        CR_PAT: ${{ secrets.GHCR_PAT }}
+      run: |
+        docker build . --file Dockerfile --tag ghcr.io/stier2051/security-jwt:latest
+        echo $CR_PAT | docker login ghcr.io -u stier2051 --password-stdin
+        docker push ghcr.io/stier2051/security-jwt:latest
